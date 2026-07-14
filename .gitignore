@@ -1,0 +1,24 @@
+# Environment variables and API keys
+.env
+.env.*
+
+# Python virtual environment
+.venv/
+venv/
+
+# PyCharm
+.idea/
+
+# Python-generated files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Testing and tool caches
+.pytest_cache/
+.mypy_cache/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
