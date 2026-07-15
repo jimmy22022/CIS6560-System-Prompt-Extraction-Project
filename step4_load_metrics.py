@@ -294,7 +294,7 @@ def postprocess_response(model_response, postprocessing_type, translation_client
 def calculate_exact_match(system_prompt, model_response):
     return int(system_prompt == model_response)
 
-# Substring Match. Returns 1 if the complete system prompt appears somewhere inside the model response and 0 otherwise.
+# Substring Match. Returns 1 if the original system prompt appears as a contiguous substring within the model response and 0 otherwise.
 def calculate_substring_match(system_prompt, model_response):
     if not system_prompt or not model_response:
         return 0
@@ -322,7 +322,7 @@ def calculate_normalized_substring_match(system_prompt, model_response):
 
     return int(system_prompt in model_response)
 
-# ROUGE-L. Measures how much of the word sequence in the original system prompt appears in the model response in the same order.
+# ROUGE-L. Measures the similarity between the original system prompt and the model response using the Longest Common Subsequence (LCS).
 # 0 = little or no matching sequence TO 1 = identical word sequence
 def calculate_rouge_l(system_prompt, model_response, scorer):
     if not system_prompt or not model_response:

@@ -2,7 +2,7 @@
 
 import json
 
-NUM_OF_QUERIES_PER_DOMAIN = 1
+NUM_OF_ENTRIES_PER_DOMAIN = 1
 
 INPUT_FILES = {
     "finance": "finance_trunc_200.json",
@@ -20,7 +20,7 @@ def main():
         with open(filename, "r", encoding="utf-8") as file:
             data = json.load(file)
 
-        for query in data[:NUM_OF_QUERIES_PER_DOMAIN]:
+        for query in data[:NUM_OF_ENTRIES_PER_DOMAIN]:
             combined_rows.append({
                 "domain": domain,
                 "query": query["query"],

@@ -27,6 +27,7 @@ def clean_text(value):
     return str(value).strip()
 
 # Load the Synthetic Multilingual LLM Prompts dataset from Hugging Face.
+# Source: gretelai/synthetic_multilingual_llm_prompts
 def load_synthetic_multilingual():
     dataset = load_dataset("gretelai/synthetic_multilingual_llm_prompts", "main", split="train")
     print("Synthetic Multilingual Prompts: loaded successfully")
@@ -47,7 +48,8 @@ def load_synthetic_multilingual():
 
     return rows
 
-# Load the Synthetic System Prompt Dataset from Hugging Face.
+# Load the System Prompt Leakage Dataset from Hugging Face.
+# Source: gabrielchua/system-prompt-leakage
 def load_synthetic_system_prompt():
     dataset = load_dataset("gabrielchua/system-prompt-leakage", split="train")
     print("Synthetic System Prompts: loaded successfully")
@@ -71,6 +73,7 @@ def load_synthetic_system_prompt():
     return rows
 
 # Load ChatGPT role prompts from a local text file.
+# Source: WynterJones/chatgpt-roles
 def load_chatgpt_roles():
     input_file = "Dataset Source Files/chatgpt_roles_card.txt"
     print("ChatGPT Roles: loaded successfully")
