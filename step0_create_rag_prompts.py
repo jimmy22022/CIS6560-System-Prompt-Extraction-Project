@@ -5,10 +5,10 @@ import json
 NUM_OF_QUERIES_PER_DOMAIN = 1
 
 INPUT_FILES = {
-    "finance": "finance_trunc_200.json",
-    "legal": "legal_trunc_200.json",
-    "medical": "medical_trunc_200.json",
-    "news": "news_trunc_200.json"
+    "finance": "Dataset Source Files/finance_trunc_200.json"
+    #"legal": "Dataset Source Files/legal_trunc_200.json",
+    #"medical": "Dataset Source Files/medical_trunc_200.json",
+    #"news": "Dataset Source Files/news_trunc_200.json"
 }
 
 OUTPUT_FILE = "Dataset Source Files/rag_prompts_baseline.json"

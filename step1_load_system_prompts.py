@@ -11,7 +11,7 @@ import pandas as pd
 import re
 import json
 
-DATASET_ROWS = 4
+DATASET_ROWS = 1 # CHANGE BACK TO 4 FOR FINAL SUBMISSION
 
 RAG_INPUT_FILE = "Dataset Source Files/rag_prompts_baseline.json"
 SENSITIVE_INPUT_FILE = "Dataset Source Files/sensitive_information_prompts.csv"
@@ -29,9 +29,6 @@ def clean_text(value):
 # Load the Synthetic Multilingual LLM Prompts dataset from Hugging Face.
 def load_synthetic_multilingual():
     dataset = load_dataset("gretelai/synthetic_multilingual_llm_prompts", "main", split="train")
-    print("Synthetic Multilingual Prompts: loaded successfully")
-    print("Column names:", dataset.column_names)
-    print("Number of rows:", len(dataset))
 
     sample = dataset.shuffle(seed=42).select(range(DATASET_ROWS))
 
@@ -50,9 +47,6 @@ def load_synthetic_multilingual():
 # Load the Synthetic System Prompt Dataset from Hugging Face.
 def load_synthetic_system_prompt():
     dataset = load_dataset("gabrielchua/system-prompt-leakage", split="train")
-    print("Synthetic System Prompts: loaded successfully")
-    print("Column names:", dataset.column_names)
-    print("Number of rows:", len(dataset))
 
     sample = dataset.select(range(DATASET_ROWS))
     # The paper used the initial portion of the much larger synthetic system prompt dataset.
@@ -73,7 +67,6 @@ def load_synthetic_system_prompt():
 # Load ChatGPT role prompts from a local text file.
 def load_chatgpt_roles():
     input_file = "Dataset Source Files/chatgpt_roles_card.txt"
-    print("ChatGPT Roles: loaded successfully")
 
     rows = []
 
@@ -105,8 +98,6 @@ def load_chatgpt_roles():
 # The query is stored separately as user_query.
 # The documents and task instructions are combined into the system_prompt.
 def load_rag_prompts():
-    print("Loading RAG-style prompts...")
-
     with open(RAG_INPUT_FILE, "r", encoding="utf-8") as file:
         data = json.load(file)
 
@@ -138,16 +129,11 @@ def load_rag_prompts():
             "system_prompt": system_prompt
         })
 
-    print("RAG-style prompts: loaded successfully")
-    print("Number of rows:", len(rows))
-
     return rows
 
 # Load the automatically generated synthetic sensitive-information prompts.
 # These prompts are used to test whether attacks can extract specific fake sensitive markers.
 def load_sensitive_information_prompts():
-    print("Loading sensitive information prompts...")
-
     df = pd.read_csv(SENSITIVE_INPUT_FILE)
 
     rows = []
@@ -161,24 +147,18 @@ def load_sensitive_information_prompts():
             "user_query": clean_text(item["user_query"])
         })
 
-    print("Sensitive information prompts: loaded successfully")
-    print("Number of rows:", len(rows))
-
     return rows
 
 def main():
     all_rows = []
 
-    all_rows.extend(load_synthetic_multilingual()) # GET RID OF COMMENT FOR FINAL EXPERIMENT
-    all_rows.extend(load_synthetic_system_prompt()) # GET RID OF COMMENT FOR FINAL EXPERIMENT
-    all_rows.extend(load_chatgpt_roles()) # GET RID OF COMMENT FOR FINAL EXPERIMENT
+    #all_rows.extend(load_synthetic_multilingual()) # GET RID OF COMMENT FOR FINAL EXPERIMENT
+    #all_rows.extend(load_synthetic_system_prompt()) # GET RID OF COMMENT FOR FINAL EXPERIMENT
+    all_rows.extend(load_chatgpt_roles())
     all_rows.extend(load_rag_prompts())
     all_rows.extend(load_sensitive_information_prompts())
 
     df = pd.DataFrame(all_rows)
-
-    print(df.head())
-    print(df.columns.tolist())
 
     column_order = [
         "id",
