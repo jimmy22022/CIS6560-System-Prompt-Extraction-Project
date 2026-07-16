@@ -77,9 +77,11 @@ def load_chatgpt_roles():
         lines = file.readlines()
 
     for line in lines:
-        line.strip()
+        line = line.strip()
+
         if not line:
             continue
+            
         match = re.match(r"^- \*\*(.+?)\*\* - (.+)$", line)
         if match:
             system_prompt = match.group(2).strip()

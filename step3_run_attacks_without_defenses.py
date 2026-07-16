@@ -20,12 +20,11 @@ MODEL_NAME_MISTRAL_7B = "mistral:7b-instruct"
 
 INPUT_FILE = "attack_cases.csv"
 
-OUTPUT_FILE_GPT_4 = "attack_results_gpt_4.csv"
-OUTPUT_FILE_GPT_4_1 = "attack_results_gpt_4_1.csv"
-OUTPUT_FILE_GEMINI_PRO = "attack_results_gemini_2_5_pro.csv"
-OUTPUT_FILE_CLAUDE = "attack_results_claude_sonnet_4_6.csv"
-OUTPUT_FILE_LLAMA_3_8B = "attack_results_llama3_8b.csv"
-OUTPUT_FILE_MISTRAL_7B = "attack_results_mistral_7b.csv"
+OUTPUT_FILE_GPT_4 = os.path.join("Attack Results Files Without Metrics", "attack_results_gpt_4.csv")
+OUTPUT_FILE_GPT_4_1 = os.path.join("Attack Results Files Without Metrics", "attack_results_gpt_4_1.csv")
+OUTPUT_FILE_CLAUDE = os.path.join("Attack Results Files Without Metrics", "attack_results_gemini_2_5_pro.csv")
+OUTPUT_FILE_LLAMA_3_8B = os.path.join("Attack Results Files Without Metrics", "attack_results_llama3_8b.csv")
+OUTPUT_FILE_MISTRAL_7B = os.path.join("Attack Results Files Without Metrics", "attack_results_mistral_7b.csv")
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 
