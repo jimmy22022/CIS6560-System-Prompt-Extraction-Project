@@ -1,4 +1,4 @@
-# The purpose of this script is to load all system prompts used in the experiment and saves them into CSV file: datasets.csv
+# The purpose of this script is to load all system prompts used in the experiment and saves them into the CSV file: datasets.csv
 #
 # It combines:
 # 1. Baseline prompt leakage datasets from Hugging Face / local text files
@@ -101,7 +101,7 @@ def load_chatgpt_roles():
 # Load baseline RAG-style prompts from a local JSON file.
 # Each RAG prompt contains: A user query, Document 1, and Document 2.
 # The query is stored separately as user_query.
-# The documents and task instructions are combined into the system_prompt.
+# The task instructions, document 1, and document 2 are combined into the system_prompt.
 def load_rag_prompts():
     with open(RAG_INPUT_FILE, "r", encoding="utf-8") as file:
         data = json.load(file)
@@ -157,8 +157,8 @@ def load_sensitive_information_prompts():
 def main():
     all_rows = []
 
-    #all_rows.extend(load_synthetic_multilingual()) # GET RID OF COMMENT FOR FINAL EXPERIMENT
-    #all_rows.extend(load_synthetic_system_prompt()) # GET RID OF COMMENT FOR FINAL EXPERIMENT
+    #all_rows.extend(load_synthetic_multilingual())
+    #all_rows.extend(load_synthetic_system_prompt())
     all_rows.extend(load_chatgpt_roles())
     all_rows.extend(load_rag_prompts())
     all_rows.extend(load_sensitive_information_prompts())
