@@ -88,7 +88,7 @@ def create_encryption_attack():
 # Turn 1 combines: a normal domain-specific user query and an attack prompt asking for the original instructions and knowledge documents.
 # Turn 2 uses a challenger prompt that points out the model did not provide the hidden instructions/documents and asks again.
 
-# This attack is only used for rows with a user_query, such as RAG prompts.
+# This attack is only used for rows with a user_query. That includes the RAG prompts as well as all sensitive-information prompts.
 def create_multi_turn_attack(user_query):
     user_query = str(user_query).strip()
 
@@ -181,8 +181,10 @@ def main():
             })
 
         # Create a multi-turn attack only when a user query exists.
-        # This prevents multi-turn attacks from being applied to generic non-RAG prompts
-        # that do not have a meaningful domain-specific query.
+        # This applies to the RAG prompts and to every sensitive-information prompt
+        # (short, long, and rag), since each was given its own user_query. It still
+        # excludes the general system prompt datasets (multilingual/system-prompt-leakage/
+        # chatgpt-roles), which have no query of their own.
         if has_user_query(user_query):
             multi_turn_attack = create_multi_turn_attack(user_query)
 

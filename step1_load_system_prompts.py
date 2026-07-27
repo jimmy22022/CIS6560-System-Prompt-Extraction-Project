@@ -1,4 +1,4 @@
-# The purpose of this script is to load all system prompts used in the experiment and saves them into CSV file: datasets.csv
+# The purpose of this script is to load all system prompts used in the experiment and saves them into the CSV file: datasets.csv
 #
 # It combines:
 # 1. Baseline prompt leakage datasets from Hugging Face / local text files
@@ -30,9 +30,6 @@ def clean_text(value):
 # Source: gretelai/synthetic_multilingual_llm_prompts
 def load_synthetic_multilingual():
     dataset = load_dataset("gretelai/synthetic_multilingual_llm_prompts", "main", split="train")
-    print("Synthetic Multilingual Prompts: loaded successfully")
-    print("Column names:", dataset.column_names)
-    print("Number of rows:", len(dataset))
 
     sample = dataset.shuffle(seed=42).select(range(DATASET_ROWS))
 
@@ -52,13 +49,10 @@ def load_synthetic_multilingual():
 # Source: gabrielchua/system-prompt-leakage
 def load_synthetic_system_prompt():
     dataset = load_dataset("gabrielchua/system-prompt-leakage", split="train")
-    print("Synthetic System Prompts: loaded successfully")
-    print("Column names:", dataset.column_names)
-    print("Number of rows:", len(dataset))
 
     sample = dataset.select(range(DATASET_ROWS))
     # The paper used the initial portion of the much larger synthetic system prompt dataset.
-    # I followed a similar approach of only taking the first 5 rows.
+    # I followed a similar approach of only taking the first DATASET_ROWS rows.
 
     rows = []
 
@@ -76,7 +70,6 @@ def load_synthetic_system_prompt():
 # Source: WynterJones/chatgpt-roles
 def load_chatgpt_roles():
     input_file = "Dataset Source Files/chatgpt_roles_card.txt"
-    print("ChatGPT Roles: loaded successfully")
 
     rows = []
 
@@ -84,9 +77,11 @@ def load_chatgpt_roles():
         lines = file.readlines()
 
     for line in lines:
-        line.strip()
+        line = line.strip()
+
         if not line:
             continue
+            
         match = re.match(r"^- \*\*(.+?)\*\* - (.+)$", line)
         if match:
             system_prompt = match.group(2).strip()
@@ -106,10 +101,8 @@ def load_chatgpt_roles():
 # Load baseline RAG-style prompts from a local JSON file.
 # Each RAG prompt contains: A user query, Document 1, and Document 2.
 # The query is stored separately as user_query.
-# The documents and task instructions are combined into the system_prompt.
+# The task instructions, document 1, and document 2 are combined into the system_prompt.
 def load_rag_prompts():
-    print("Loading RAG-style prompts...")
-
     with open(RAG_INPUT_FILE, "r", encoding="utf-8") as file:
         data = json.load(file)
 
@@ -141,16 +134,11 @@ def load_rag_prompts():
             "system_prompt": system_prompt
         })
 
-    print("RAG-style prompts: loaded successfully")
-    print("Number of rows:", len(rows))
-
     return rows
 
 # Load the automatically generated synthetic sensitive-information prompts.
 # These prompts are used to test whether attacks can extract specific fake sensitive markers.
 def load_sensitive_information_prompts():
-    print("Loading sensitive information prompts...")
-
     df = pd.read_csv(SENSITIVE_INPUT_FILE)
 
     rows = []
@@ -164,24 +152,18 @@ def load_sensitive_information_prompts():
             "user_query": clean_text(item["user_query"])
         })
 
-    print("Sensitive information prompts: loaded successfully")
-    print("Number of rows:", len(rows))
-
     return rows
 
 def main():
     all_rows = []
 
-    all_rows.extend(load_synthetic_multilingual()) # GET RID OF COMMENT FOR FINAL EXPERIMENT
-    all_rows.extend(load_synthetic_system_prompt()) # GET RID OF COMMENT FOR FINAL EXPERIMENT
-    all_rows.extend(load_chatgpt_roles()) # GET RID OF COMMENT FOR FINAL EXPERIMENT
+    all_rows.extend(load_synthetic_multilingual())
+    all_rows.extend(load_synthetic_system_prompt())
+    all_rows.extend(load_chatgpt_roles())
     all_rows.extend(load_rag_prompts())
     all_rows.extend(load_sensitive_information_prompts())
 
     df = pd.DataFrame(all_rows)
-
-    print(df.head())
-    print(df.columns.tolist())
 
     column_order = [
         "id",
