@@ -11,7 +11,7 @@ import pandas as pd
 import re
 import json
 
-DATASET_ROWS = 1 # CHANGE BACK TO 4 FOR FINAL SUBMISSION
+DATASET_ROWS = 4
 
 RAG_INPUT_FILE = "Dataset Source Files/rag_prompts_baseline.json"
 SENSITIVE_INPUT_FILE = "Dataset Source Files/sensitive_information_prompts.csv"
@@ -52,7 +52,7 @@ def load_synthetic_system_prompt():
 
     sample = dataset.select(range(DATASET_ROWS))
     # The paper used the initial portion of the much larger synthetic system prompt dataset.
-    # I followed a similar approach of only taking the first 5 rows.
+    # I followed a similar approach of only taking the first DATASET_ROWS rows.
 
     rows = []
 
@@ -157,8 +157,8 @@ def load_sensitive_information_prompts():
 def main():
     all_rows = []
 
-    #all_rows.extend(load_synthetic_multilingual())
-    #all_rows.extend(load_synthetic_system_prompt())
+    all_rows.extend(load_synthetic_multilingual())
+    all_rows.extend(load_synthetic_system_prompt())
     all_rows.extend(load_chatgpt_roles())
     all_rows.extend(load_rag_prompts())
     all_rows.extend(load_sensitive_information_prompts())

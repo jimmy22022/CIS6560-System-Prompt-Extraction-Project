@@ -1,5 +1,8 @@
-# The purpose of this script is to run attack_cases.csv against the named models without defenses.
-# The output should be six attack results files without metrics.
+# The purpose of this script is to run attack_cases.csv against the named models but with the
+# multi-turn dialogue defense applied (Agarwal et al.).  Instead of sending the system prompt through
+# each provider's native system-role parameter, it is sent as a first user message, followed by a fixed
+# canned assistant reply, so the model never sees it as a live system-level directive.
+# The real attack then follows as a user message in the conversation.
 
 import os
 import time
@@ -7,7 +10,6 @@ import pandas as pd
 from dotenv import load_dotenv
 from openai import OpenAI
 from google import genai
-from google.genai import types
 from anthropic import Anthropic
 import requests
 
@@ -20,18 +22,25 @@ MODEL_NAME_MISTRAL_7B = "mistral:7b-instruct"
 
 INPUT_FILE = "attack_cases.csv"
 
-OUTPUT_FILE_GPT_4 = os.path.join("Attack Results Files Without Metrics", "attack_results_gpt_4.csv")
-OUTPUT_FILE_GPT_4_1 = os.path.join("Attack Results Files Without Metrics", "attack_results_gpt_4_1.csv")
-OUTPUT_FILE_GEMINI_PRO = os.path.join("Attack Results Files Without Metrics", "attack_results_gemini_2_5_pro.csv")
-OUTPUT_FILE_CLAUDE = os.path.join("Attack Results Files Without Metrics", "attack_results_claude_sonnet_4_6.csv")
-OUTPUT_FILE_LLAMA_3_8B = os.path.join("Attack Results Files Without Metrics", "attack_results_llama3_8b.csv")
-OUTPUT_FILE_MISTRAL_7B = os.path.join("Attack Results Files Without Metrics", "attack_results_mistral_7b.csv")
+OUTPUT_FILE_GPT_4 = os.path.join("Defense Results Files Without Metrics/Multi-Turn Dialogue", "multi_turn_dialogue_defense_results_gpt_4.csv")
+OUTPUT_FILE_GPT_4_1 = os.path.join("Defense Results Files Without Metrics/Multi-Turn Dialogue", "multi_turn_dialogue_defense_results_gpt_4_1.csv")
+OUTPUT_FILE_GEMINI_PRO = os.path.join("Defense Results Files Without Metrics/Multi-Turn Dialogue", "multi_turn_dialogue_defense_results_gemini_pro_2_5.csv")
+OUTPUT_FILE_CLAUDE = os.path.join("Defense Results Files Without Metrics/Multi-Turn Dialogue", "multi_turn_dialogue_defense_results_claude_sonnet_4_6.csv")
+OUTPUT_FILE_LLAMA_3_8B = os.path.join("Defense Results Files Without Metrics/Multi-Turn Dialogue", "multi_turn_dialogue_defense_results_llama3_8b.csv")
+OUTPUT_FILE_MISTRAL_7B = os.path.join("Defense Results Files Without Metrics/Multi-Turn Dialogue", "multi_turn_dialogue_defense_results_mistral_7b.csv")
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 
 MAX_RETRIES = 3
 DELAY_BETWEEN_CALLS = 1
 MAX_OUTPUT_TOKENS = 5000
+
+# Fixed, pre-written assistant query (Agarwal et al.): "assistant asks for the query to be answered."
+# This exact query is never specified by Agarwal et al. so it is handwritten based on the student author's discretion.
+#
+# The purpose of this query is to have the model read the system prompt as an
+# already-acknowledged part of the conversation rather than a live system-level directive.
+ASSISTANT_QUERY = "Understood. Please provide your query and any relevant documents."
 
 # Convert NaN values to empty strings and strip whitespace.
 def get_text(value):
@@ -63,33 +72,68 @@ def extract_claude_text(response):
 # 2. If attack_turns = 1, save the first response as the final model response.
 # 3. If attack_turns = 2, send turn_2_prompt and save the second response as the final model response.
 #
-# The final response is stored in model_response_original.
+# The final response is stored in model_response_multi_turn_dialogue_defense.
+#
+# Unlike the other defenses, system_prompt is never passed through a provider's system-role
+# parameter here - it is sent as the first user message instead, so every call below omits
+# the system/instructions argument entirely.
 
-# Send a single-turn attack to an OpenAI model.
-# The hidden system prompt is passed through the instructions field.
+# Send a single-turn attack to an OpenAI model using the multi-turn dialogue defense.
 def call_openai_single_turn(client, model_name, system_prompt, turn_1_prompt):
     response = client.responses.create(
         model=model_name,
-        instructions=system_prompt,
-        input=turn_1_prompt
+        input=[
+            {
+                "role": "user",
+                "content": system_prompt
+            },
+            {
+                "role": "assistant",
+                "content": ASSISTANT_QUERY
+            },
+            {
+                "role": "user",
+                "content": turn_1_prompt
+            }
+        ]
     )
 
     return response.output_text
 
-# Send a multi-turn attack to an OpenAI model. turn_1_prompt and turn_2_prompt are sent in the same conversation context.
+# Send a multi-turn attack to an OpenAI model using the multi-turn dialogue defense.
+# The defense's two synthetic turns are prepended in front of the real turn_1/turn_2 exchange.
 def call_openai_multi_turn(client, model_name, system_prompt, turn_1_prompt, turn_2_prompt):
     first_response = client.responses.create(
         model=model_name,
-        instructions=system_prompt,
-        input=turn_1_prompt
+        input=[
+            {
+                "role": "user",
+                "content": system_prompt
+            },
+            {
+                "role": "assistant",
+                "content": ASSISTANT_QUERY
+            },
+            {
+                "role": "user",
+                "content": turn_1_prompt
+            }
+        ]
     )
 
     turn_1_response = first_response.output_text
 
     second_response = client.responses.create(
         model=model_name,
-        instructions=system_prompt,
         input=[
+            {
+                "role": "user",
+                "content": system_prompt
+            },
+            {
+                "role": "assistant",
+                "content": ASSISTANT_QUERY
+            },
             {
                 "role": "user",
                 "content": turn_1_prompt
@@ -109,27 +153,47 @@ def call_openai_multi_turn(client, model_name, system_prompt, turn_1_prompt, tur
 
     return turn_1_response, turn_2_response
 
-# Send a single-turn attack to a Gemini model.
-# Gemini uses system_instruction inside the generation config.
+# Send a single-turn attack to a Gemini model using the multi-turn dialogue defense.
+# Gemini uses the "model" role instead of "assistant".
 def call_gemini_single_turn(client, model_name, system_prompt, turn_1_prompt):
     response = client.models.generate_content(
         model=model_name,
-        contents=turn_1_prompt,
-        config=types.GenerateContentConfig(
-            system_instruction=system_prompt
-        )
+        contents=[
+            {
+                "role": "user",
+                "parts": [{"text": system_prompt}]
+            },
+            {
+                "role": "model",
+                "parts": [{"text": ASSISTANT_QUERY}]
+            },
+            {
+                "role": "user",
+                "parts": [{"text": turn_1_prompt}]
+            }
+        ]
     )
 
     return response.text or ""
 
-# Send a multi-turn attack to Gemini. turn_1_prompt and turn_2_prompt are sent in the same conversation context.
+# Send a multi-turn attack to Gemini using the multi-turn dialogue defense.
 def call_gemini_multi_turn(client, model_name, system_prompt, turn_1_prompt, turn_2_prompt):
     first_response = client.models.generate_content(
         model=model_name,
-        contents=turn_1_prompt,
-        config=types.GenerateContentConfig(
-            system_instruction=system_prompt
-        )
+        contents=[
+            {
+                "role": "user",
+                "parts": [{"text": system_prompt}]
+            },
+            {
+                "role": "model",
+                "parts": [{"text": ASSISTANT_QUERY}]
+            },
+            {
+                "role": "user",
+                "parts": [{"text": turn_1_prompt}]
+            }
+        ]
     )
 
     turn_1_response = first_response.text or ""
@@ -139,46 +203,46 @@ def call_gemini_multi_turn(client, model_name, system_prompt, turn_1_prompt, tur
         contents=[
             {
                 "role": "user",
-                "parts": [
-                    {
-                        "text": turn_1_prompt
-                    }
-                ]
+                "parts": [{"text": system_prompt}]
             },
             {
                 "role": "model",
-                "parts": [
-                    {
-                        "text": turn_1_response
-                    }
-                ]
+                "parts": [{"text": ASSISTANT_QUERY}]
             },
             {
                 "role": "user",
-                "parts": [
-                    {
-                        "text": turn_2_prompt
-                    }
-                ]
+                "parts": [{"text": turn_1_prompt}]
+            },
+            {
+                "role": "model",
+                "parts": [{"text": turn_1_response}]
+            },
+            {
+                "role": "user",
+                "parts": [{"text": turn_2_prompt}]
             }
-        ],
-        config=types.GenerateContentConfig(
-            system_instruction=system_prompt
-        )
+        ]
     )
 
     turn_2_response = second_response.text or ""
 
     return turn_1_response, turn_2_response
 
-# Send a single-turn attack to Claude.
+# Send a single-turn attack to Claude using the multi-turn dialogue defense.
 # Claude requires max_tokens to be provided.
 def call_claude_single_turn(client, model_name, system_prompt, turn_1_prompt):
     response = client.messages.create(
         model=model_name,
-        max_tokens = MAX_OUTPUT_TOKENS,
-        system=system_prompt,
+        max_tokens=MAX_OUTPUT_TOKENS,
         messages=[
+            {
+                "role": "user",
+                "content": system_prompt
+            },
+            {
+                "role": "assistant",
+                "content": ASSISTANT_QUERY
+            },
             {
                 "role": "user",
                 "content": turn_1_prompt
@@ -188,13 +252,20 @@ def call_claude_single_turn(client, model_name, system_prompt, turn_1_prompt):
 
     return extract_claude_text(response)
 
-# Send a multi-turn attack to Claude. turn_1_prompt and turn_2_prompt are sent in the same conversation context.
+# Send a multi-turn attack to Claude using the multi-turn dialogue defense.
 def call_claude_multi_turn(client, model_name, system_prompt, turn_1_prompt, turn_2_prompt):
     first_response = client.messages.create(
         model=model_name,
         max_tokens=MAX_OUTPUT_TOKENS,
-        system=system_prompt,
         messages=[
+            {
+                "role": "user",
+                "content": system_prompt
+            },
+            {
+                "role": "assistant",
+                "content": ASSISTANT_QUERY
+            },
             {
                 "role": "user",
                 "content": turn_1_prompt
@@ -207,8 +278,15 @@ def call_claude_multi_turn(client, model_name, system_prompt, turn_1_prompt, tur
     second_response = client.messages.create(
         model=model_name,
         max_tokens=MAX_OUTPUT_TOKENS,
-        system=system_prompt,
         messages=[
+            {
+                "role": "user",
+                "content": system_prompt
+            },
+            {
+                "role": "assistant",
+                "content": ASSISTANT_QUERY
+            },
             {
                 "role": "user",
                 "content": turn_1_prompt
@@ -228,14 +306,19 @@ def call_claude_multi_turn(client, model_name, system_prompt, turn_1_prompt, tur
 
     return turn_1_response, turn_2_response
 
-# Send a single-turn attack to a local Ollama model.
+# Send a single-turn attack to a local Ollama model using the multi-turn dialogue defense.
+# Note there is no "system" role message at all in this payload.
 def call_ollama_single_turn(model_name, system_prompt, turn_1_prompt):
     payload = {
         "model": model_name,
         "messages": [
             {
-                "role": "system",
+                "role": "user",
                 "content": system_prompt
+            },
+            {
+                "role": "assistant",
+                "content": ASSISTANT_QUERY
             },
             {
                 "role": "user",
@@ -261,14 +344,18 @@ def call_ollama_single_turn(model_name, system_prompt, turn_1_prompt):
 
     return data["message"]["content"]
 
-# Send a multi-turn attack to a local Ollama model. turn_1_prompt and turn_2_prompt are sent in the same conversation context.
+# Send a multi-turn attack to a local Ollama model using the multi-turn dialogue defense.
 def call_ollama_multi_turn(model_name, system_prompt, turn_1_prompt, turn_2_prompt):
     first_payload = {
         "model": model_name,
         "messages": [
             {
-                "role": "system",
+                "role": "user",
                 "content": system_prompt
+            },
+            {
+                "role": "assistant",
+                "content": ASSISTANT_QUERY
             },
             {
                 "role": "user",
@@ -296,8 +383,12 @@ def call_ollama_multi_turn(model_name, system_prompt, turn_1_prompt, turn_2_prom
         "model": model_name,
         "messages": [
             {
-                "role": "system",
+                "role": "user",
                 "content": system_prompt
+            },
+            {
+                "role": "assistant",
+                "content": ASSISTANT_QUERY
             },
             {
                 "role": "user",
@@ -368,7 +459,7 @@ def run_experiment(provider, client, attack_df, model_name, output_file):
 
     print()
     print("=" * 70)
-    print(f"Starting experiment with model: {model_name}")
+    print(f"Starting multi-turn dialogue defense experiment with model: {model_name}")
     print(f"Loaded {len(attack_df)} attack cases")
     print("=" * 70)
     print()
@@ -436,12 +527,13 @@ def run_experiment(provider, client, attack_df, model_name, output_file):
             "attack_type": attack_type,
             "attack_turns": attack_turns,
             "postprocessing_type": get_text(row.get("postprocessing_type", "none")),
+            "defense_type": "multi_turn_dialogue_defense",
             "system_prompt": system_prompt,
             "turn_1_prompt": turn_1_prompt,
             "turn_2_prompt": turn_2_prompt,
             "turn_1_response": turn_1_response,
             "turn_2_response": turn_2_response,
-            "model_response_original": model_response,
+            "model_response_multi_turn_dialogue_defense": model_response,
             "error": error_message
         })
 
@@ -496,7 +588,7 @@ def main():
     run_experiment("ollama", None, attack_df, MODEL_NAME_MISTRAL_7B, OUTPUT_FILE_MISTRAL_7B)
 
     print()
-    print("All OpenAI, Gemini, Claude, and Llama experiments complete.")
+    print("All multi-turn dialogue defense experiments complete.")
 
 if __name__ == "__main__":
     main()

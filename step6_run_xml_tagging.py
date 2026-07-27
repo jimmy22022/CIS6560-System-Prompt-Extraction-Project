@@ -1,5 +1,5 @@
-# The purpose of this script is to run attack_cases.csv against the named models without defenses.
-# The output should be six attack results files without metrics.
+# The purpose of this script is to run attack_cases.csv against the named models but with XML Tagging applied.
+# The output should be six XML Tagging results files without metrics.
 
 import os
 import time
@@ -20,12 +20,12 @@ MODEL_NAME_MISTRAL_7B = "mistral:7b-instruct"
 
 INPUT_FILE = "attack_cases.csv"
 
-OUTPUT_FILE_GPT_4 = os.path.join("Attack Results Files Without Metrics", "attack_results_gpt_4.csv")
-OUTPUT_FILE_GPT_4_1 = os.path.join("Attack Results Files Without Metrics", "attack_results_gpt_4_1.csv")
-OUTPUT_FILE_GEMINI_PRO = os.path.join("Attack Results Files Without Metrics", "attack_results_gemini_2_5_pro.csv")
-OUTPUT_FILE_CLAUDE = os.path.join("Attack Results Files Without Metrics", "attack_results_claude_sonnet_4_6.csv")
-OUTPUT_FILE_LLAMA_3_8B = os.path.join("Attack Results Files Without Metrics", "attack_results_llama3_8b.csv")
-OUTPUT_FILE_MISTRAL_7B = os.path.join("Attack Results Files Without Metrics", "attack_results_mistral_7b.csv")
+OUTPUT_FILE_GPT_4 = os.path.join("Defense Results Files Without Metrics/XML Tagging", "xml_tagging_defense_results_gpt_4.csv")
+OUTPUT_FILE_GPT_4_1 = os.path.join("Defense Results Files Without Metrics/XML Tagging", "xml_tagging_defense_results_gpt_4_1.csv")
+OUTPUT_FILE_GEMINI_PRO = os.path.join("Defense Results Files Without Metrics/XML Tagging", "xml_tagging_defense_results_gemini_pro_2_5.csv")
+OUTPUT_FILE_CLAUDE = os.path.join("Defense Results Files Without Metrics/XML Tagging", "xml_tagging_defense_results_claude_sonnet_4_6.csv")
+OUTPUT_FILE_LLAMA_3_8B = os.path.join("Defense Results Files Without Metrics/XML Tagging", "xml_tagging_defense_results_llama3_8b.csv")
+OUTPUT_FILE_MISTRAL_7B = os.path.join("Defense Results Files Without Metrics/XML Tagging", "xml_tagging_defense_results_mistral_7b.csv")
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 
@@ -39,6 +39,16 @@ def get_text(value):
         return ""
 
     return str(value).strip()
+
+# In XML tagging, different sections of the system prompt are surrounded using XML tags, creating boundary awareness for the LLM.
+def xml_tagging(text, tag_name):
+    text = get_text(text)
+
+    return (
+        f"===== {tag_name} =====\n"
+        f"{text}\n"
+        f"===== /{tag_name} ====="
+    )
 
 # Convert the attack_turns column into an integer.
 # Single-turn attacks = 1 and Multi-turn attacks = 2
@@ -63,7 +73,7 @@ def extract_claude_text(response):
 # 2. If attack_turns = 1, save the first response as the final model response.
 # 3. If attack_turns = 2, send turn_2_prompt and save the second response as the final model response.
 #
-# The final response is stored in model_response_original.
+# The final response is stored in model_response_xml_tagging_defense.
 
 # Send a single-turn attack to an OpenAI model.
 # The hidden system prompt is passed through the instructions field.
@@ -368,7 +378,7 @@ def run_experiment(provider, client, attack_df, model_name, output_file):
 
     print()
     print("=" * 70)
-    print(f"Starting experiment with model: {model_name}")
+    print(f"Starting XML tagging defense experiment with model: {model_name}")
     print(f"Loaded {len(attack_df)} attack cases")
     print("=" * 70)
     print()
@@ -390,6 +400,10 @@ def run_experiment(provider, client, attack_df, model_name, output_file):
         turn_2_prompt = get_text(row.get("turn_2_prompt", ""))
         attack_turns = get_attack_turns(row.get("attack_turns", 1))
 
+        system_prompt_with_xml_tagging_defense = xml_tagging(system_prompt, "SYSTEM INSTRUCTIONS")
+        turn_1_prompt_with_xml_tagging_defense = xml_tagging(turn_1_prompt, "USER INPUT")
+        turn_2_prompt_with_xml_tagging_defense = xml_tagging(turn_2_prompt, "USER INPUT")
+
         model_response = ""
         turn_1_response = ""
         turn_2_response = ""
@@ -398,10 +412,10 @@ def run_experiment(provider, client, attack_df, model_name, output_file):
         for attempt in range(1, MAX_RETRIES + 1):
             try:
                 if attack_turns == 1:
-                    turn_1_response = call_model_single_turn(provider, client, model_name, system_prompt, turn_1_prompt)
+                    turn_1_response = call_model_single_turn(provider, client, model_name, system_prompt_with_xml_tagging_defense, turn_1_prompt_with_xml_tagging_defense)
                     model_response = turn_1_response
                 else:
-                    turn_1_response, turn_2_response = call_model_multi_turn(provider, client, model_name, system_prompt, turn_1_prompt, turn_2_prompt)
+                    turn_1_response, turn_2_response = call_model_multi_turn(provider, client, model_name, system_prompt_with_xml_tagging_defense, turn_1_prompt_with_xml_tagging_defense, turn_2_prompt_with_xml_tagging_defense)
                     model_response = turn_2_response
 
                 error_message = ""
@@ -436,12 +450,16 @@ def run_experiment(provider, client, attack_df, model_name, output_file):
             "attack_type": attack_type,
             "attack_turns": attack_turns,
             "postprocessing_type": get_text(row.get("postprocessing_type", "none")),
+            "defense_type": "xml_tagging_defense",
             "system_prompt": system_prompt,
+            "system_prompt_with_xml_tagging_defense": system_prompt_with_xml_tagging_defense,
             "turn_1_prompt": turn_1_prompt,
             "turn_2_prompt": turn_2_prompt,
+            "turn_1_prompt_with_xml_tagging_defense": turn_1_prompt_with_xml_tagging_defense,
+            "turn_2_prompt_with_xml_tagging_defense": turn_2_prompt_with_xml_tagging_defense,
             "turn_1_response": turn_1_response,
             "turn_2_response": turn_2_response,
-            "model_response_original": model_response,
+            "model_response_xml_tagging_defense": model_response,
             "error": error_message
         })
 
@@ -496,7 +514,7 @@ def main():
     run_experiment("ollama", None, attack_df, MODEL_NAME_MISTRAL_7B, OUTPUT_FILE_MISTRAL_7B)
 
     print()
-    print("All OpenAI, Gemini, Claude, and Llama experiments complete.")
+    print("All XML tagging defense experiments complete.")
 
 if __name__ == "__main__":
     main()

@@ -74,27 +74,129 @@ EXPERIMENT_CONFIGS = [
         "input_files": [
             (
                 "Defense Results Files Without Metrics/Sandwich Defense/"
-                "instruction_defense_results_gpt_4.csv"
+                "sandwich_defense_results_gpt_4.csv"
             ),
             (
                 "Defense Results Files Without Metrics/Sandwich Defense/"
-                "instruction_defense_results_gpt_4_1.csv"
+                "sandwich_defense_results_gpt_4_1.csv"
             ),
             (
                 "Defense Results Files Without Metrics/Sandwich Defense/"
-                "instruction_defense_results_gemini_pro_2_5.csv"
+                "sandwich_defense_results_gemini_pro_2_5.csv"
             ),
             (
                 "Defense Results Files Without Metrics/Sandwich Defense/"
-                "instruction_defense_results_claude_sonnet_4_6.csv"
+                "sandwich_defense_results_claude_sonnet_4_6.csv"
             ),
             (
                 "Defense Results Files Without Metrics/Sandwich Defense/"
-                "instruction_defense_results_llama3_8b.csv"
+                "sandwich_defense_results_llama3_8b.csv"
             ),
             (
                 "Defense Results Files Without Metrics/Sandwich Defense/"
-                "instruction_defense_results_mistral_7b.csv"
+                "sandwich_defense_results_mistral_7b.csv"
+            )
+        ]
+    },
+
+    {
+        "experiment_name": "xml_tagging_defense",
+        "response_column": "model_response_xml_tagging_defense",
+        "output_folder": (
+            "Defense Results Files With Metrics/XML Tagging"
+        ),
+        "input_files": [
+            (
+                "Defense Results Files Without Metrics/XML Tagging/"
+                "xml_tagging_defense_results_gpt_4.csv"
+            ),
+            (
+                "Defense Results Files Without Metrics/XML Tagging/"
+                "xml_tagging_defense_results_gpt_4_1.csv"
+            ),
+            (
+                "Defense Results Files Without Metrics/XML Tagging/"
+                "xml_tagging_defense_results_gemini_pro_2_5.csv"
+            ),
+            (
+                "Defense Results Files Without Metrics/XML Tagging/"
+                "xml_tagging_defense_results_claude_sonnet_4_6.csv"
+            ),
+            (
+                "Defense Results Files Without Metrics/XML Tagging/"
+                "xml_tagging_defense_results_llama3_8b.csv"
+            ),
+            (
+                "Defense Results Files Without Metrics/XML Tagging/"
+                "xml_tagging_defense_results_mistral_7b.csv"
+            )
+        ]
+    },
+
+    {
+        "experiment_name": "multi_turn_dialogue_defense",
+        "response_column": "model_response_multi_turn_dialogue_defense",
+        "output_folder": (
+            "Defense Results Files With Metrics/Multi-Turn Dialogue"
+        ),
+        "input_files": [
+            (
+                "Defense Results Files Without Metrics/Multi-Turn Dialogue/"
+                "multi_turn_dialogue_defense_results_gpt_4.csv"
+            ),
+            (
+                "Defense Results Files Without Metrics/Multi-Turn Dialogue/"
+                "multi_turn_dialogue_defense_results_gpt_4_1.csv"
+            ),
+            (
+                "Defense Results Files Without Metrics/Multi-Turn Dialogue/"
+                "multi_turn_dialogue_defense_results_gemini_pro_2_5.csv"
+            ),
+            (
+                "Defense Results Files Without Metrics/Multi-Turn Dialogue/"
+                "multi_turn_dialogue_defense_results_claude_sonnet_4_6.csv"
+            ),
+            (
+                "Defense Results Files Without Metrics/Multi-Turn Dialogue/"
+                "multi_turn_dialogue_defense_results_llama3_8b.csv"
+            ),
+            (
+                "Defense Results Files Without Metrics/Multi-Turn Dialogue/"
+                "multi_turn_dialogue_defense_results_mistral_7b.csv"
+            )
+        ]
+    },
+
+    {
+        "experiment_name": "system_prompt_filtering",
+        "response_column": "model_response_system_prompt_filtering",
+        "output_folder": (
+            "Defense Results Files With Metrics/System Prompt Filtering"
+        ),
+        "input_files": [
+            (
+                "Defense Results Files Without Metrics/System Prompt Filtering/"
+                "system_prompt_filtering_results_gpt_4.csv"
+            ),
+            (
+                "Defense Results Files Without Metrics/System Prompt Filtering/"
+                "system_prompt_filtering_results_gpt_4_1.csv"
+            ),
+            (
+                "Defense Results Files Without Metrics/System Prompt Filtering/"
+                "system_prompt_filtering_results_gemini_pro_2_5.csv"
+            ),
+            (
+                "Defense Results Files Without Metrics/System Prompt Filtering/"
+                "system_prompt_filtering_results_claude_sonnet_4_6.csv"
+            ),
+            (
+                "Defense Results Files Without Metrics/System Prompt Filtering/"
+                "system_prompt_filtering_results_llama3_8b.csv"
+            ),
+            (
+                "Defense Results Files Without Metrics/System Prompt Filtering/"
+                "system_prompt_filtering_results_mistral_7b.csv"
             )
         ]
     }
