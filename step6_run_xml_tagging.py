@@ -16,7 +16,7 @@ MODEL_NAME_GPT_4_1 = "gpt-4.1"
 MODEL_NAME_GEMINI_PRO = "gemini-2.5-pro"
 MODEL_NAME_CLAUDE = "claude-sonnet-4-6"
 MODEL_NAME_LLAMA_3_8B = "llama3:8b"
-MODEL_NAME_MISTRAL_7B = "mistral:7b-instruct"
+MODEL_NAME_MISTRAL_7B = "mistral:latest"
 
 INPUT_FILE = "attack_cases.csv"
 
@@ -27,7 +27,7 @@ OUTPUT_FILE_CLAUDE = os.path.join("Defense Results Files Without Metrics/XML Tag
 OUTPUT_FILE_LLAMA_3_8B = os.path.join("Defense Results Files Without Metrics/XML Tagging", "xml_tagging_defense_results_llama3_8b.csv")
 OUTPUT_FILE_MISTRAL_7B = os.path.join("Defense Results Files Without Metrics/XML Tagging", "xml_tagging_defense_results_mistral_7b.csv")
 
-OLLAMA_URL = "http://localhost:11434/api/chat"
+OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
 
 MAX_RETRIES = 3
 DELAY_BETWEEN_CALLS = 1
@@ -506,12 +506,12 @@ def main():
     gemini_client = genai.Client(api_key=gemini_api_key)
     claude_client = Anthropic(api_key=anthropic_api_key)
 
-    run_experiment("openai", openai_client, attack_df, MODEL_NAME_GPT_4, OUTPUT_FILE_GPT_4)
-    run_experiment("openai", openai_client, attack_df, MODEL_NAME_GPT_4_1, OUTPUT_FILE_GPT_4_1)
+    #run_experiment("openai", openai_client, attack_df, MODEL_NAME_GPT_4, OUTPUT_FILE_GPT_4)
+    #run_experiment("openai", openai_client, attack_df, MODEL_NAME_GPT_4_1, OUTPUT_FILE_GPT_4_1)
     run_experiment("gemini", gemini_client, attack_df, MODEL_NAME_GEMINI_PRO, OUTPUT_FILE_GEMINI_PRO)
-    run_experiment("claude", claude_client, attack_df, MODEL_NAME_CLAUDE, OUTPUT_FILE_CLAUDE)
-    run_experiment("ollama", None, attack_df, MODEL_NAME_LLAMA_3_8B, OUTPUT_FILE_LLAMA_3_8B)
-    run_experiment("ollama", None, attack_df, MODEL_NAME_MISTRAL_7B, OUTPUT_FILE_MISTRAL_7B)
+    #run_experiment("claude", claude_client, attack_df, MODEL_NAME_CLAUDE, OUTPUT_FILE_CLAUDE)
+    #run_experiment("ollama", None, attack_df, MODEL_NAME_LLAMA_3_8B, OUTPUT_FILE_LLAMA_3_8B)
+    #run_experiment("ollama", None, attack_df, MODEL_NAME_MISTRAL_7B, OUTPUT_FILE_MISTRAL_7B)
 
     print()
     print("All XML tagging defense experiments complete.")

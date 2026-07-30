@@ -3,8 +3,6 @@
 # it decides after generation whether to show the model's response or replace it with a safe refusal.
 # The output should be six system prompt filtering results files without metrics.
 
-# RUN STEP 8 AGAIN AFTER RUNNING THIS.  This is because the filtered results files need to be scored again.
-
 import os
 import re
 import pandas as pd

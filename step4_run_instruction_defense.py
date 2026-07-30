@@ -16,7 +16,7 @@ MODEL_NAME_GPT_4_1 = "gpt-4.1"
 MODEL_NAME_GEMINI_PRO = "gemini-2.5-pro"
 MODEL_NAME_CLAUDE = "claude-sonnet-4-6"
 MODEL_NAME_LLAMA_3_8B = "llama3:8b"
-MODEL_NAME_MISTRAL_7B = "mistral:7b-instruct"
+MODEL_NAME_MISTRAL_7B = "mistral:latest"
 
 INPUT_FILE = "attack_cases.csv"
 
@@ -27,7 +27,7 @@ OUTPUT_FILE_CLAUDE = os.path.join("Defense Results Files Without Metrics/Instruc
 OUTPUT_FILE_LLAMA_3_8B = os.path.join("Defense Results Files Without Metrics/Instruction Defense", "instruction_defense_results_llama3_8b.csv")
 OUTPUT_FILE_MISTRAL_7B = os.path.join("Defense Results Files Without Metrics/Instruction Defense", "instruction_defense_results_mistral_7b.csv")
 
-OLLAMA_URL = "http://localhost:11434/api/chat"
+OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
 
 MAX_RETRIES = 3
 DELAY_BETWEEN_CALLS = 1
